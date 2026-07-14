@@ -1,8 +1,9 @@
 import { DataSource, DataSourceOptions } from 'typeorm'
-import * as dotenv from 'dotenv'
 import { CustomNamingStrategy } from '../common/strategies/naming.strategy'
+import { setupEnvironmentVariables } from '../config/variables.config'
 
-dotenv.config()
+// setup environment variables
+setupEnvironmentVariables()
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'mysql',
