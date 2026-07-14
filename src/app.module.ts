@@ -6,10 +6,25 @@ import { AuthModule } from './modules/auth/auth.module'
 import { UsersModule } from './modules/users/users.module'
 import { TenantsModule } from './modules/tenants/tenants.module'
 import { dataSourceOptions } from './database/datasource'
+import { ConfigModule } from '@nestjs/config'
+import { APP_GUARD } from '@nestjs/core'
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
 
 @Module({
-  imports: [TypeOrmModule.forRoot(dataSourceOptions), AuthModule, UsersModule, TenantsModule],
+  imports: [
+    TypeOrmModule.forRoot(dataSourceOptions),
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
+    UsersModule,
+    TenantsModule,
+  ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

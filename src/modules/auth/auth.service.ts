@@ -1,10 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { LoginDto, RegisterDto } from './dto/auth.dto'
 import { UsersService } from '../users/users.service'
-import { User, UserRole } from '../users/entities/user.entity'
+import { User } from '../users/entities/user.entity'
 import { TenantsService } from '../tenants/tenants.service'
 import { TokenService } from './services/token.service'
 import { PasswordService } from './services/password.service'
+import { UserRole, UserStatus } from '../../common/enums/user.enum'
+import { TokenPayload } from '../../common/interfaces/token.interface'
 
 @Injectable()
 export class AuthService {
@@ -17,10 +19,10 @@ export class AuthService {
 
   private getTokenPayload(user: User) {
     return {
-      id: user.id,
-      fullName: user.fullName,
+      userId: user.id,
       email: user.email,
-      tenant: { id: user.tenant?.id, name: user.tenant?.name },
+      role: user.role,
+      tenantId: user.tenant?.id,
     }
   }
 
@@ -28,9 +30,9 @@ export class AuthService {
     return this.userService.getUserByEmail(email)
   }
 
-  private async getAccessAndRefreshToken(user: User) {
+  private async generateAuthTokens(user: User) {
     // generate tokens
-    const payload = this.getTokenPayload(user)
+    const payload: TokenPayload = this.getTokenPayload(user)
 
     const [accessToken, refreshToken] = await Promise.all([
       await this.tokenService.generateAccessToken(payload),
@@ -40,7 +42,7 @@ export class AuthService {
     // update token in user
     await this.userService.updateRefreshToken(user.id, refreshToken)
 
-    return { accessToken, refreshToken }
+    return accessToken
   }
 
   async login(payload: LoginDto) {
@@ -62,10 +64,10 @@ export class AuthService {
     }
 
     // generate tokens
-    const tokens = await this.getAccessAndRefreshToken(user)
+    const accessToken = await this.generateAuthTokens(user)
 
     // return response
-    return tokens
+    return { token: accessToken }
   }
 
   async register(payload: RegisterDto) {
@@ -89,13 +91,18 @@ export class AuthService {
       email,
       password: hashedPassword,
       role: UserRole.OWNER,
+      status: UserStatus.ACTIVE,
       tenantId: tenant.id,
     })
 
     // generate tokens
-    const tokens = await this.getAccessAndRefreshToken({ ...savedUser, tenant })
+    const accessToken = await this.generateAuthTokens({ ...savedUser, tenant })
 
     // return response
-    return tokens
+    return { token: accessToken }
+  }
+
+  async logout(userId: string) {
+    return this.userService.updateRefreshToken(userId, null)
   }
 }

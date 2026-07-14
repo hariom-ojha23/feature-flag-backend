@@ -19,7 +19,19 @@ export class UsersService {
     return await this.userRepo.findOneBy({ email })
   }
 
-  async updateRefreshToken(id: string, token: string) {
-    return this.userRepo.update(id, { refreshToken: token })
+  async updateRefreshToken(id: string, token: string | null) {
+    let payload: Partial<User> = {
+      refreshToken: token,
+    }
+
+    // if token is available (in case of login | register)
+    if (token) {
+      payload = {
+        ...payload,
+        lastLoginAt: new Date(),
+      }
+    }
+
+    return this.userRepo.update(id, payload)
   }
 }

@@ -1,9 +1,7 @@
 import { DataSource, DataSourceOptions } from 'typeorm'
 import { CustomNamingStrategy } from '../common/strategies/naming.strategy'
-import { setupEnvironmentVariables } from '../config/variables.config'
-
-// setup environment variables
-setupEnvironmentVariables()
+import * as dotenv from 'dotenv'
+dotenv.config()
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'mysql',
@@ -17,7 +15,7 @@ export const dataSourceOptions: DataSourceOptions = {
   synchronize: true,
 
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  migrations: [__dirname + '/migrations/*{.ts,.js}']
+  migrations: [__dirname + '/migrations/*{.ts,.js}'],
 }
 
 export const dataSource = new DataSource(dataSourceOptions)

@@ -2,19 +2,7 @@ import { Column, Entity, ManyToOne } from 'typeorm'
 import { BaseEntity } from '../../../common/entities/base.entity'
 import { Exclude } from 'class-transformer'
 import { Tenant } from '../../tenants/entities/tenant.entity'
-
-export enum UserRole {
-  OWNER = 'owner', // created the tenant, full access
-  ADMIN = 'admin', // manage users, flags, environments
-  EDITOR = 'editor', // create/edit flags, can't manage users/billing
-  VIEWER = 'viewer', // read-only, dashboards only
-}
-
-export enum UserStatus {
-  ACTIVE = 'active',
-  INVITED = 'invited', // invited to join, but not accepted yet
-  SUSPENDED = 'suspended',
-}
+import { UserRole, UserStatus } from '../../../common/enums/user.enum'
 
 @Entity()
 export class User extends BaseEntity {
@@ -34,7 +22,7 @@ export class User extends BaseEntity {
   password!: string
 
   @Column({ nullable: true, type: 'longtext' })
-  avatarUrl?: string
+  avatarUrl?: string | null
 
   @Column({
     type: 'enum',
@@ -51,17 +39,17 @@ export class User extends BaseEntity {
   status!: UserStatus
 
   @Column({ nullable: true, type: 'timestamp' })
-  lastLoginAt?: Date
+  lastLoginAt?: Date | null
 
   @Column({ default: false })
-  isEmailVerified?: boolean
+  isEmailVerified!: boolean
 
   @Column({ nullable: true, type: 'timestamp' })
-  invitedAt?: Date
+  invitedAt?: Date | null
 
   @Column({ nullable: true })
   invitedBy?: string
 
   @Column({ nullable: true, type: 'longtext' })
-  refreshToken?: string
+  refreshToken?: string | null
 }
