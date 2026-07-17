@@ -7,14 +7,22 @@ import { TokenService } from './services/token.service'
 import { PasswordService } from './services/password.service'
 import { UserRole, UserStatus } from '../../common/enums/user.enum'
 import { TokenPayload } from '../../common/interfaces/token.interface'
+import { NotificationService } from '../notification/notification.service'
+import { OtpService } from '../otp/otp.service'
+import { MailTemplateService } from '../mail/services/mail-template.service'
+import { ConfigService } from '@nestjs/config'
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly configService: ConfigService,
     private readonly userService: UsersService,
     private readonly tenantService: TenantsService,
     private readonly tokenService: TokenService,
     private readonly passwordService: PasswordService,
+    private readonly otpService: OtpService,
+    private readonly notificationService: NotificationService,
+    private readonly mailTemplateService: MailTemplateService,
   ) {}
 
   private getTokenPayload(user: User) {
@@ -43,6 +51,25 @@ export class AuthService {
     await this.userService.updateRefreshToken(user.id, refreshToken)
 
     return accessToken
+  }
+
+  private getVerifyEmailHtml(code: string) {
+    return this.mailTemplateService.render('otp-verification', {
+      APP_NAME: this.configService.get<string>('APP_NAME') ?? 'Featurix',
+      OTP_CODE: code,
+      CURRENT_YEAR: new Date().getFullYear().toString(),
+    })
+  }
+
+  private async sendEmailVerificationCode(user: User) {
+    const code = await this.otpService.generate(user.email)
+    const htmlContent = this.getVerifyEmailHtml(code)
+
+    await this.notificationService.sendMail({
+      to: [{ email: user.email, name: user.fullName }],
+      subject: 'Verify your email',
+      htmlContent: htmlContent,
+    })
   }
 
   async login(payload: LoginDto) {
@@ -94,6 +121,9 @@ export class AuthService {
       status: UserStatus.ACTIVE,
       tenantId: tenant.id,
     })
+
+    // send email verification code
+    await this.sendEmailVerificationCode(savedUser)
 
     // generate tokens
     const accessToken = await this.generateAuthTokens({ ...savedUser, tenant })

@@ -7,6 +7,9 @@ import { TenantsModule } from '../tenants/tenants.module'
 import { PasswordService } from './services/password.service'
 import { TokenService } from './services/token.service'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { OtpModule } from '../otp/otp.module'
+import { NotificationModule } from '../notification/notification.module'
+import { MailModule } from '../mail/mail.module'
 
 @Module({
   controllers: [AuthController],
@@ -26,6 +29,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
     }),
     UsersModule,
     TenantsModule,
+    OtpModule,
+    MailModule,
+    NotificationModule,
   ],
 })
 export class AuthModule {}

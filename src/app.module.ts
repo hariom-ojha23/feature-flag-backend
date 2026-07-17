@@ -9,6 +9,9 @@ import { dataSourceOptions } from './database/datasource'
 import { ConfigModule } from '@nestjs/config'
 import { APP_GUARD } from '@nestjs/core'
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
+import { MailModule } from './modules/mail/mail.module'
+import { OtpModule } from './modules/otp/otp.module'
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -17,6 +20,9 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
     AuthModule,
     UsersModule,
     TenantsModule,
+    MailModule,
+    OtpModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [
