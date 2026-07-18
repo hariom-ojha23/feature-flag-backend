@@ -34,7 +34,7 @@ export class OtpService {
     return code
   }
 
-  async verify(payload: VerifyOtpDto): Promise<boolean> {
+  async verify(payload: VerifyOtpDto): Promise<void> {
     const { code, email } = payload
 
     // get latest unused otp using email
@@ -55,7 +55,7 @@ export class OtpService {
       throw new BadRequestException('Maximum attempts exceeded. Please request a new OTP.')
     }
 
-    if (await this.passwordService.verify(otp.code, code)) {
+    if (!(await this.passwordService.verify(otp.code, code))) {
       otp.attemptCount += 1
       await this.otpRepo.save(otp)
       const remaining = MAX_ATTEMPTS - otp.attemptCount
@@ -66,10 +66,8 @@ export class OtpService {
       )
     }
 
-    // mark otp as used
+    // mark otp as used if valid
     otp.isUsed = true
     await this.otpRepo.save(otp)
-
-    return true
   }
 }

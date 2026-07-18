@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
 import { LoginDto, RegisterDto } from './dto/auth.dto'
 import { UsersService } from '../users/users.service'
 import { User } from '../users/entities/user.entity'
@@ -39,8 +39,8 @@ export class AuthService {
     const payload: TokenPayload = this.getTokenPayload(user)
 
     const [accessToken, refreshToken] = await Promise.all([
-      await this.tokenService.generateAccessToken(payload),
-      await this.tokenService.generateRefreshToken(payload),
+      this.tokenService.generateAccessToken(payload),
+      this.tokenService.generateRefreshToken(payload),
     ])
 
     // update token in user
@@ -57,7 +57,7 @@ export class AuthService {
     })
   }
 
-  private async sendEmailVerificationCode(user: User) {
+  private async sendEmailVerifyCode(user: User) {
     const code = await this.otpService.generate(user.email)
     const htmlContent = this.getVerifyEmailHtml(code)
 
@@ -80,10 +80,20 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials')
     }
 
+    // user is not active
+    if (user.status !== UserStatus.ACTIVE) {
+      throw new UnauthorizedException('User is not active')
+    }
+
     // verify password
     const valid = await this.passwordService.verify(user.password, password)
     if (!valid) {
       throw new UnauthorizedException('Invalid credentials')
+    }
+
+    // if email not verified, send otp
+    if (!user.isEmailVerified) {
+      await this.sendEmailVerifyCode(user)
     }
 
     // generate tokens
@@ -118,11 +128,11 @@ export class AuthService {
       tenantId: tenant.id,
     })
 
-    // send email verification code
-    await this.sendEmailVerificationCode(savedUser)
-
-    // generate tokens
-    const accessToken = await this.generateAuthTokens({ ...savedUser, tenant })
+    // send email verification code & generate tokens
+    const [_, accessToken] = await Promise.all([
+      this.sendEmailVerifyCode(savedUser),
+      this.generateAuthTokens({ ...savedUser, tenant }),
+    ])
 
     // return response
     return { token: accessToken }
@@ -133,9 +143,53 @@ export class AuthService {
   }
 
   async getSessionData(userId: string, tenantId: string) {
-    const user = await this.userService.getUserById(userId)
-    const tenant = await this.tenantService.getTenantById(tenantId)
+    const [user, tenant] = await Promise.all([
+      this.userService.getUserById(userId),
+      this.tenantService.getTenantById(tenantId),
+    ])
 
     return { user, tenant, project: null, availableProjects: [] }
+  }
+
+  async resendEmailVerifyCode(userId: string) {
+    const user = await this.userService.getUserById(userId)
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+
+    // user is not active
+    if (user.status !== UserStatus.ACTIVE) {
+      throw new UnauthorizedException('User is not active')
+    }
+
+    if (user.isEmailVerified) {
+      throw new BadRequestException('Email is already verified')
+    }
+
+    await this.sendEmailVerifyCode(user)
+
+    return { success: true, message: 'Email sent successfully' }
+  }
+
+  async verifyEmail(otp: string, userId: string) {
+    const user = await this.userService.getUserById(userId)
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+
+    // user is not active
+    if (user.status !== UserStatus.ACTIVE) {
+      throw new UnauthorizedException('User is not active')
+    }
+
+    if (user.isEmailVerified) {
+      throw new BadRequestException('Email already verified')
+    }
+
+    await this.otpService.verify({ code: otp, email: user.email })
+
+    user.isEmailVerified = true
+    await this.userService.updateEmailVerifyFlag(user)
+    return { success: true, message: 'Email verified successfully' }
   }
 }

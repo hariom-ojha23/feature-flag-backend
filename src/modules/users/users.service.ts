@@ -52,4 +52,8 @@ export class UsersService {
 
     return this.userRepo.update(id, payload)
   }
+
+  async updateEmailVerifyFlag(user: User) {
+    return this.userRepo.save(user)
+  }
 }

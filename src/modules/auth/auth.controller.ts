@@ -3,6 +3,7 @@ import { AuthService } from './auth.service'
 import { LoginDto, RegisterDto } from './dto/auth.dto'
 import { Public } from '../../common/decorators/public.decorator'
 import type CustomRequest from '../../common/interfaces/request.interface'
+import { VerifyOtpDto } from '../otp/dto/otp.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -32,6 +33,24 @@ export class AuthController {
   async logout(@Req() req: CustomRequest) {
     try {
       return this.authService.logout(req.user.userId)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  @Post('verify-email')
+  async verifyEmail(@Body('otp') otp: string, @Req() req: CustomRequest) {
+    try {
+      return this.authService.verifyEmail(otp, req.user.userId)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  @Post('verify-email/resend')
+  async resendVerifyEmailCode(@Req() req: CustomRequest) {
+    try {
+      return this.authService.resendEmailVerifyCode(req.user.userId)
     } catch (error) {
       throw error
     }

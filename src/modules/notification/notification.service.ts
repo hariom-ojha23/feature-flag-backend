@@ -7,6 +7,6 @@ export class NotificationService {
   constructor(private readonly mailService: MailService) {}
 
   async sendMail(options: SendEmailOptions) {
-    this.mailService.sendMail(options)
+    return this.mailService.sendMail(options)
   }
 }
