@@ -8,6 +8,10 @@ export class TenantsService {
   constructor(@InjectRepository(Tenant) private readonly tenantRepo: Repository<Tenant>) {}
 
   async addTenant(name: string) {
-    return await this.tenantRepo.save({ name })
+    return this.tenantRepo.save({ name })
+  }
+
+  async getTenantById(tenantId: string) {
+    return this.tenantRepo.findOneBy({ id: tenantId })
   }
 }

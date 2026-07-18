@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req } from '@nestjs/common'
+import { Body, Controller, Get, Post, Req } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { LoginDto, RegisterDto } from './dto/auth.dto'
 import { Public } from '../../common/decorators/public.decorator'
@@ -30,6 +30,20 @@ export class AuthController {
 
   @Post('logout')
   async logout(@Req() req: CustomRequest) {
-    return this.authService.logout(req.user.userId)
+    try {
+      return this.authService.logout(req.user.userId)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  @Get('session')
+  async getSessionData(@Req() req: CustomRequest) {
+    try {
+      const { userId, tenantId } = req.user
+      return this.authService.getSessionData(userId, tenantId)
+    } catch (error) {
+      throw error
+    }
   }
 }

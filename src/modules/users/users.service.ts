@@ -15,8 +15,26 @@ export class UsersService {
     })
   }
 
+  /**
+   * @description this function must be use only for login
+   * @param email
+   * @returns {{ User }}
+   */
   async getUserByEmail(email: string) {
-    return await this.userRepo.findOneBy({ email })
+    return this.userRepo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.tenant', 'tenant')
+      .addSelect('user.password')
+      .where('user.email = :email', { email })
+      .getOne()
+  }
+
+  async getUserById(userId: string) {
+    return await this.userRepo.findOneBy({ id: userId })
+  }
+
+  async checkEmailExist(email: string) {
+    return this.userRepo.findOneBy({ email })
   }
 
   async updateRefreshToken(id: string, token: string | null) {

@@ -34,10 +34,6 @@ export class AuthService {
     }
   }
 
-  private async getUserByEmail(email: string) {
-    return this.userService.getUserByEmail(email)
-  }
-
   private async generateAuthTokens(user: User) {
     // generate tokens
     const payload: TokenPayload = this.getTokenPayload(user)
@@ -79,7 +75,7 @@ export class AuthService {
     }
 
     // verify user
-    const user = await this.getUserByEmail(payload.email)
+    const user = await this.userService.getUserByEmail(email)
     if (!user) {
       throw new UnauthorizedException('Invalid credentials')
     }
@@ -101,7 +97,7 @@ export class AuthService {
     const { fullName, email, password, tenantName } = payload
 
     // verify user
-    const user = await this.getUserByEmail(payload.email)
+    const user = await this.userService.checkEmailExist(payload.email)
     if (user) {
       throw new UnauthorizedException('User with this email already exist')
     }
@@ -134,5 +130,12 @@ export class AuthService {
 
   async logout(userId: string) {
     return this.userService.updateRefreshToken(userId, null)
+  }
+
+  async getSessionData(userId: string, tenantId: string) {
+    const user = await this.userService.getUserById(userId)
+    const tenant = await this.tenantService.getTenantById(tenantId)
+
+    return { user, tenant, project: null, availableProjects: [] }
   }
 }
