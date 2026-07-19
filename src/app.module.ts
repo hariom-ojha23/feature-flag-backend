@@ -12,6 +12,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
 import { MailModule } from './modules/mail/mail.module'
 import { OtpModule } from './modules/otp/otp.module'
 import { NotificationModule } from './modules/notification/notification.module';
+import { ProjectsModule } from './modules/projects/projects.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     MailModule,
     OtpModule,
     NotificationModule,
+    ProjectsModule,
   ],
   controllers: [AppController],
   providers: [
