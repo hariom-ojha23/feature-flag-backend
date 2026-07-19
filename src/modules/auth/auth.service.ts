@@ -11,6 +11,7 @@ import { NotificationService } from '../notification/notification.service'
 import { OtpService } from '../otp/otp.service'
 import { MailTemplateService } from '../mail/services/mail-template.service'
 import { ConfigService } from '@nestjs/config'
+import { ProjectsService } from '../projects/projects.service'
 
 @Injectable()
 export class AuthService {
@@ -18,6 +19,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly userService: UsersService,
     private readonly tenantService: TenantsService,
+    private readonly projectService: ProjectsService,
     private readonly tokenService: TokenService,
     private readonly passwordService: PasswordService,
     private readonly otpService: OtpService,
@@ -142,13 +144,20 @@ export class AuthService {
     return this.userService.updateRefreshToken(userId, null)
   }
 
-  async getSessionData(userId: string, tenantId: string) {
-    const [user, tenant] = await Promise.all([
+  async getSessionData(userId: string, tenantId: string, activeProjectId: string | undefined) {
+    const [user, tenant, availableProjects] = await Promise.all([
       this.userService.getUserById(userId),
       this.tenantService.getTenantById(tenantId),
+      this.projectService.getAllProjectsForSession(tenantId),
     ])
 
-    return { user, tenant, project: null, availableProjects: [] }
+    const resolvedProjectId = activeProjectId ?? availableProjects[0]?.id
+
+    const project = resolvedProjectId
+      ? await this.projectService.getProjectForSession(resolvedProjectId, tenantId)
+      : null
+
+    return { user, tenant, project, availableProjects }
   }
 
   async resendEmailVerifyCode(userId: string) {

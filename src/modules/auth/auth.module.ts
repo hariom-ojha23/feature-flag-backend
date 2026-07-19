@@ -10,6 +10,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { OtpModule } from '../otp/otp.module'
 import { NotificationModule } from '../notification/notification.module'
 import { MailModule } from '../mail/mail.module'
+import { ProjectsModule } from '../projects/projects.module'
 
 @Module({
   controllers: [AuthController],
@@ -32,6 +33,7 @@ import { MailModule } from '../mail/mail.module'
     OtpModule,
     MailModule,
     NotificationModule,
+    ProjectsModule
   ],
 })
 export class AuthModule {}

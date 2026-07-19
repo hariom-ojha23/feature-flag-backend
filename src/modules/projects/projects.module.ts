@@ -9,5 +9,6 @@ import { KeyGeneratorService } from '../../common/services/key-generator.service
   controllers: [ProjectsController],
   providers: [ProjectsService, KeyGeneratorService],
   imports: [TypeOrmModule.forFeature([Project])],
+  exports: [ProjectsService]
 })
 export class ProjectsModule {}

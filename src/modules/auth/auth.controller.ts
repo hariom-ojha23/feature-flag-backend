@@ -1,9 +1,8 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common'
+import { Body, Controller, Get, Post, Query, Req } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { LoginDto, RegisterDto } from './dto/auth.dto'
 import { Public } from '../../common/decorators/public.decorator'
 import type CustomRequest from '../../common/interfaces/request.interface'
-import { VerifyOtpDto } from '../otp/dto/otp.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -12,57 +11,33 @@ export class AuthController {
   @Public()
   @Post('login')
   async login(@Body() body: LoginDto) {
-    try {
-      return this.authService.login(body)
-    } catch (error) {
-      throw error
-    }
+    return this.authService.login(body)
   }
 
   @Public()
   @Post('register')
   async register(@Body() body: RegisterDto) {
-    try {
-      return this.authService.register(body)
-    } catch (error) {
-      throw error
-    }
+    return this.authService.register(body)
   }
 
   @Post('logout')
   async logout(@Req() req: CustomRequest) {
-    try {
-      return this.authService.logout(req.user.userId)
-    } catch (error) {
-      throw error
-    }
+    return this.authService.logout(req.user.userId)
   }
 
   @Post('verify-email')
   async verifyEmail(@Body('otp') otp: string, @Req() req: CustomRequest) {
-    try {
-      return this.authService.verifyEmail(otp, req.user.userId)
-    } catch (error) {
-      throw error
-    }
+    return this.authService.verifyEmail(otp, req.user.userId)
   }
 
   @Post('verify-email/resend')
   async resendVerifyEmailCode(@Req() req: CustomRequest) {
-    try {
-      return this.authService.resendEmailVerifyCode(req.user.userId)
-    } catch (error) {
-      throw error
-    }
+    return this.authService.resendEmailVerifyCode(req.user.userId)
   }
 
   @Get('session')
-  async getSessionData(@Req() req: CustomRequest) {
-    try {
-      const { userId, tenantId } = req.user
-      return this.authService.getSessionData(userId, tenantId)
-    } catch (error) {
-      throw error
-    }
+  async getSessionData(@Query('projectId') projectId: string | undefined, @Req() req: CustomRequest) {
+    const { userId, tenantId } = req.user
+    return this.authService.getSessionData(userId, tenantId, projectId)
   }
 }

@@ -35,5 +35,5 @@ export class Project extends BaseEntity {
 
   @Index()
   @Column({ nullable: true })
-  archived_at?: Date
+  archivedAt?: Date
 }

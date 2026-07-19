@@ -14,7 +14,7 @@ export class ProjectsService {
     private readonly keyGenerator: KeyGeneratorService,
   ) {}
 
-  async addProject(body: CreateProjectDto, tenantId: string, userId: string) {
+  async addProject(body: CreateProjectDto, tenantId: string, userId: string): Promise<Project> {
     const key = await this.keyGenerator.generateUniqueKey(body.name, {
       entity: Project,
       where: { tenant: { id: tenantId } },
@@ -45,12 +45,23 @@ export class ProjectsService {
     }
   }
 
-  async previewProjectKey(name: string, tenantId: string) {
+  async previewProjectKey(name: string, tenantId: string): Promise<{ key: string }> {
     const key = await this.keyGenerator.generateUniqueKey(name, {
       entity: Project,
       where: { tenant: { id: tenantId } },
     })
 
     return { key }
+  }
+
+  async getAllProjectsForSession(tenantId: string): Promise<Partial<Project>[]> {
+    return this.projectRepo.find({
+      where: { tenant: { id: tenantId } },
+      select: { id: true, name: true, key: true },
+    })
+  }
+
+  async getProjectForSession(projectId: string, tenantId: string): Promise<Project | null> {
+    return this.projectRepo.findOneBy({ id: projectId, tenant: { id: tenantId } })
   }
 }
